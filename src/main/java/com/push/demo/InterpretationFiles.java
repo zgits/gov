@@ -13,6 +13,8 @@ public class InterpretationFiles {
 
     private String filecontent;
 
+    private String fileurl;
+
     @Override
     public String toString() {
         return "InterpretationFiles{" +
@@ -20,7 +22,16 @@ public class InterpretationFiles {
                 ", title='" + title + '\'' +
                 ", fileName='" + fileName + '\'' +
                 ", filecontent='" + filecontent + '\'' +
+                ", fileurl='" + fileurl + '\'' +
                 '}';
+    }
+
+    public String getFileurl() {
+        return fileurl;
+    }
+
+    public void setFileurl(String fileurl) {
+        this.fileurl = fileurl;
     }
 
     public String getFileno() {

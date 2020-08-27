@@ -33,11 +33,10 @@ public class RecPushInfo {
         try {
             String postDataSerc = recData.getPostData();
             logger.warn("获取到的加密数据：" + recData);
-            logger.warn("-----" + Sm4Util.encryptEcb(key, "werwer"));
             String decryptPostData = Sm4Util.decryptEcb(key, postDataSerc);
             logger.warn("解密后的数据：" + decryptPostData);
             PostData postData = JSON.parseObject(decryptPostData, PostData.class);
-
+            logger.warn(postData.getStatus());
             logger.warn("解密后转换成实体类之后：" + postData);
             String title = postData.getDocumentTitle();
             String status = postData.getStatus();
@@ -52,6 +51,7 @@ public class RecPushInfo {
                 resultStatus = Boolean.FALSE.toString();
                 msg = "消息接收数据失败，请重新检查推送内容！";
             }
+            logger.warn("接收的数据："+postData.toString());
         } catch (Exception e) {
             logger.error("获取数据出错",e);
             resultStatus = Boolean.FALSE.toString();
@@ -60,9 +60,9 @@ public class RecPushInfo {
 
         Map<String, String> result = new HashMap<>();
         result.put("status", resultStatus);
-        flag = flag * -1;
+//        flag = flag * -1;
         result.put("msg", msg);
-        logger.warn("接收的数据："+recData.toString());
+
         return result;
     }
 }
