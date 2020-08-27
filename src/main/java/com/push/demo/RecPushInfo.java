@@ -11,8 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -42,6 +46,31 @@ public class RecPushInfo {
             String status = postData.getStatus();
             String sqNo = postData.getSequenceNo();
             String docContent = postData.getDocumentContent();
+
+            List<AppendFile> appendFiles = postData.getAppendFile();
+            int i=0;
+            for (AppendFile appendFile : appendFiles) {
+                i++;
+                String fileName = appendFile.getFileName(); //生成的新文件
+                String string =appendFile.getFilecontent();
+                try {
+                    // 解码，然后将字节转换为文件
+                    byte[] bytes = new BASE64Decoder().decodeBuffer(string);   //将字符串转换为byte数组
+                    ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+                    byte[] buffer = new byte[1024];
+                    FileOutputStream out = new FileOutputStream(fileName);
+                    int bytesum = 0;
+                    int byteread = 0;
+                    while ((byteread = in.read(buffer)) != -1) {
+                        bytesum += byteread;
+                        out.write(buffer, 0, byteread); //文件写操作
+                    }
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            }
+
+
             String deDocContent = new String(new BASE64Decoder().decodeBuffer(docContent),"UTF-8");
             logger.warn("正文内容："+deDocContent);
             if (flag == 1) {
