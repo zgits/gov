@@ -121,16 +121,25 @@ public class RecPushInfo {
 
 
     private String sendToHy(PostData postData) throws IOException {
-        MediaType contentType = MediaType.parse("application/json; charset=utf-8");
+        MediaType contentType = MediaType.parse("application/x-www-form-urlencoded;charset=UTF-8");
         OkHttpClient httpClient = new OkHttpClient.Builder()
+                .connectTimeout(100, TimeUnit.SECONDS)
+                .readTimeout(100, TimeUnit.SECONDS)
+                .writeTimeout(100, TimeUnit.SECONDS)
                 .build();
         Map<String, String> map = new HashMap<>();
-        map.put("DOCHTMLCON", postData.toString());
-        map.put("DOCTITLE", postData.getDocumentTitle());
-        map.put("methodname", "savedocumentinweb");
-        map.put("serviceid", "gov_document");
+        map.put("DOCHTMLCON", "postData.toString()");
+        map.put("DOCTITLE", "postData.getDocumentTitle()");
+        map.put("methodname", "saveDocumentInWeb");
+        map.put("serviceid", "gov_webdocument");
+        map.put("CHANNELID", "19918");
+        map.put("DOCTYPE", "20");
+        map.put("ObjectId", "0");
+        map.put("CurrUserName", "autoadmin");
 
-        okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(contentType, JSON.toJSONString(map));
+        String param = "CHANNELID=19918&DOCTYPE=20&serviceid=gov_webdocument&methodname=saveDocumentInWeb&ObjectId=0&CurrUserName=autoadmin&DOCHTMLCON="+postData.toString()+"&DOCTITLE="+postData.getDocumentTitle();
+
+        okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(contentType, param);
 
         Request request = new Request.Builder()
                 .url("http://192.168.200.171/gov/gov.do")
