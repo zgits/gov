@@ -2,6 +2,7 @@ package com.push.demo;
 
 
 import com.alibaba.fastjson.JSON;
+import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,10 +15,8 @@ import sun.misc.BASE64Encoder;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/service")
@@ -32,21 +31,21 @@ public class RecPushInfo {
 
     @PostMapping("/postDeptPolicyMessageInfo")
     public Map<String, String> getSendInfo(@RequestBody RecData recData) {
+        logger.warn("_______________________________________________________________________________________________");
+        logger.warn("_______________________________________________________________________________________________");
         String msg = "";
         String resultStatus = Boolean.TRUE.toString();
         try {
             String postDataSerc = recData.getPostData();
-            logger.warn("获取到的加密数据：" + recData);
+//            logger.warn("获取到的加密数据：" + recData);
+//            logger.warn("_______________________________________________________________________________________________");
             String decryptPostData = Sm4Util.decryptEcb(key, postDataSerc);
-            logger.warn("解密后的数据：" + decryptPostData);
+//            logger.warn("解密后的数据：" + decryptPostData);
+//            logger.warn("_______________________________________________________________________________________________");
             PostData postData = JSON.parseObject(decryptPostData, PostData.class);
             logger.warn(postData.getStatus());
-            logger.warn("解密后转换成实体类之后：" + postData);
-            String title = postData.getDocumentTitle();
-            String status = postData.getStatus();
-            String sqNo = postData.getSequenceNo();
             String docContent = postData.getDocumentContent();
-
+            postData.setDocumentContent("");
             List<AppendFile> appendFiles = postData.getAppendFile();
             int i = 0;
             if (appendFiles!=null){
@@ -72,6 +71,26 @@ public class RecPushInfo {
                     }
                 }
             }
+            List<AppendFile> newappendFile = new ArrayList<>();
+
+            if (appendFiles!=null){
+                for (AppendFile appendFile : appendFiles) {
+                    appendFile.setDocumentTitle(null);
+                    appendFile.setFilecontent(null);
+                    appendFile.setFileno(null);
+                    appendFile.setFileurl(null);
+                    newappendFile.add(appendFile);
+                }
+            }
+            postData.setAppendFile(newappendFile);
+            logger.warn("解密后转换成实体类之后：" + postData);
+            logger.warn("_______________________________________________________________________________________________");
+            String title = postData.getDocumentTitle();
+            String status = postData.getStatus();
+            String sqNo = postData.getSequenceNo();
+
+
+
 
             String deDocContent = new String(new BASE64Decoder().decodeBuffer(docContent), "UTF-8");
             logger.warn("正文内容：" + deDocContent);
@@ -82,8 +101,12 @@ public class RecPushInfo {
                 resultStatus = Boolean.FALSE.toString();
                 msg = "消息接收数据失败，请重新检查推送内容！";
             }
-            logger.warn("接收的数据：" + postData.toString());
-        } catch (Exception e) {
+            sendToHy(postData);
+//            logger.warn("接收的数据：" + postData.toString());
+        }catch (IOException e){
+            logger.error("保存海云出错",e);
+        }
+        catch (Exception e) {
             logger.error("获取数据出错", e);
             resultStatus = Boolean.FALSE.toString();
             msg = "消息接收数据失败，请重新检查推送内容！";
@@ -93,7 +116,33 @@ public class RecPushInfo {
         result.put("status", resultStatus);
 //        flag = flag * -1;
         result.put("msg", msg);
-
         return result;
+    }
+
+
+    private String sendToHy(PostData postData) throws IOException {
+        MediaType contentType = MediaType.parse("application/json; charset=utf-8");
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .build();
+        Map<String, String> map = new HashMap<>();
+        map.put("DOCHTMLCON", postData.toString());
+        map.put("DOCTITLE", postData.getDocumentTitle());
+        map.put("methodname", "savedocumentinweb");
+        map.put("serviceid", "gov_document");
+
+        okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(contentType, JSON.toJSONString(map));
+
+        Request request = new Request.Builder()
+                .url("http://192.168.200.171/gov/gov.do")
+                .post(requestBody)
+                .build();
+
+
+        Response response = httpClient.newCall(request).execute();
+        if (response.isSuccessful()) {
+            return response.body().string();
+        } else {
+            return response.toString();
+        }
     }
 }
