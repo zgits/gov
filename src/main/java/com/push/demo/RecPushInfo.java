@@ -48,31 +48,33 @@ public class RecPushInfo {
             String docContent = postData.getDocumentContent();
 
             List<AppendFile> appendFiles = postData.getAppendFile();
-            int i=0;
-            for (AppendFile appendFile : appendFiles) {
-                i++;
-                String fileName = appendFile.getFileName(); //生成的新文件
-                String string =appendFile.getFilecontent();
-                try {
-                    // 解码，然后将字节转换为文件
-                    byte[] bytes = new BASE64Decoder().decodeBuffer(string);   //将字符串转换为byte数组
-                    ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-                    byte[] buffer = new byte[1024];
-                    FileOutputStream out = new FileOutputStream(fileName);
-                    int bytesum = 0;
-                    int byteread = 0;
-                    while ((byteread = in.read(buffer)) != -1) {
-                        bytesum += byteread;
-                        out.write(buffer, 0, byteread); //文件写操作
+            int i = 0;
+            if (appendFiles!=null){
+
+                for (int j = 0; j < appendFiles.size(); j++) {
+                    AppendFile appendFile = appendFiles.get(j);
+                    String fileName = appendFile.getFileName(); //生成的新文件
+                    String string = appendFile.getFilecontent();
+                    try {
+                        // 解码，然后将字节转换为文件
+                        byte[] bytes = new BASE64Decoder().decodeBuffer(string);   //将字符串转换为byte数组
+                        ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+                        byte[] buffer = new byte[1024];
+                        FileOutputStream out = new FileOutputStream(fileName);
+                        int bytesum = 0;
+                        int byteread = 0;
+                        while ((byteread = in.read(buffer)) != -1) {
+                            bytesum += byteread;
+                            out.write(buffer, 0, byteread); //文件写操作
+                        }
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
                     }
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
                 }
             }
 
-
-            String deDocContent = new String(new BASE64Decoder().decodeBuffer(docContent),"UTF-8");
-            logger.warn("正文内容："+deDocContent);
+            String deDocContent = new String(new BASE64Decoder().decodeBuffer(docContent), "UTF-8");
+            logger.warn("正文内容：" + deDocContent);
             if (flag == 1) {
                 resultStatus = Boolean.TRUE.toString();
                 msg = "在" + new Date() + "成功接收到顺序号为" + sqNo + ",状态为" + status + ",标题为" + title + "的政策文件！";
@@ -80,9 +82,9 @@ public class RecPushInfo {
                 resultStatus = Boolean.FALSE.toString();
                 msg = "消息接收数据失败，请重新检查推送内容！";
             }
-            logger.warn("接收的数据："+postData.toString());
+            logger.warn("接收的数据：" + postData.toString());
         } catch (Exception e) {
-            logger.error("获取数据出错",e);
+            logger.error("获取数据出错", e);
             resultStatus = Boolean.FALSE.toString();
             msg = "消息接收数据失败，请重新检查推送内容！";
         }
